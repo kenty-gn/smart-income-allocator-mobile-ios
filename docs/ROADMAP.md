@@ -64,17 +64,20 @@
 
 ---
 
-## Phase 4: 本番準備（未着手）
+## Phase 4: 本番準備 🚧 進行中
 
-### 4.1 テスト
-- [ ] Jest単体テスト
-- [ ] Detox E2Eテスト
-- [ ] エラーハンドリング強化
+### 4.1 EAS Build設定 ✅
+- [x] eas.json 作成
+- [x] app.json にbundleIdentifier追加
+- [ ] 環境変数の設定
 
-### 4.2 デプロイ
-- [ ] EAS Build設定
-- [ ] App Store提出
+### 4.2 エラーハンドリング ✅
+- [x] ErrorBoundaryコンポーネント追加
+
+### 4.3 デプロイ
+- [ ] EAS Buildテスト
 - [ ] TestFlight配布
+- [ ] App Store提出
 
 ---
 

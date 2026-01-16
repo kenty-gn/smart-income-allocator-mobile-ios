@@ -75,6 +75,7 @@ smart-income-allocator-mobile/
 | `AIAdviceCard` | 支出パターン分析とアドバイス（Pro機能） |
 | `SavingsGoal` | 貯蓄目標の進捗表示（Pro機能） |
 | `EditSettingModal` | 汎用設定編集モーダル |
+| `ErrorBoundary` | グローバルエラーハンドリング |
 
 ---
 
