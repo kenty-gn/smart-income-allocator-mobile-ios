@@ -1,5 +1,7 @@
 # アーキテクチャ
 
+> 最終更新: 2026-01-16
+
 ## 技術スタック
 
 | レイヤー | 技術 |
@@ -10,6 +12,7 @@
 | 状態管理 | React Context |
 | バックエンド | Supabase |
 | 認証 | Supabase Auth + SecureStore |
+| グラフ | react-native-gifted-charts |
 
 ---
 
@@ -17,33 +20,34 @@
 
 ```
 smart-income-allocator-mobile/
-├── app/                    # Expo Router pages
-│   ├── (auth)/            # 認証フロー（未認証ユーザー）
+├── app/                        # Expo Router pages
+│   ├── (auth)/                 # 認証フロー（未認証ユーザー）
 │   │   ├── _layout.tsx
 │   │   └── login.tsx
-│   ├── (tabs)/            # メインアプリ（認証済みユーザー）
-│   │   ├── _layout.tsx    # タブナビゲーション設定
-│   │   ├── index.tsx      # ホーム/ダッシュボード
-│   │   ├── add.tsx        # トランザクション追加 ★NEW
-│   │   ├── analytics.tsx  # 分析画面
-│   │   └── settings.tsx   # 設定画面
-│   ├── categories.tsx     # カテゴリ管理画面 ★NEW
-│   ├── _layout.tsx        # ルートレイアウト（AuthProvider）
-│   ├── modal.tsx          # モーダル画面
-│   └── +not-found.tsx     # 404画面
-├── assets/                 # 画像・フォント
-├── components/             # 再利用可能コンポーネント
-│   └── EditSettingModal.tsx # 設定編集モーダル ★NEW
-├── constants/              # 定数（Colors等）
-├── contexts/               # React Context
-│   └── AuthContext.tsx
-├── hooks/                  # カスタムフック
-├── lib/                    # ユーティリティ
+│   ├── (tabs)/                 # メインアプリ（認証済みユーザー）
+│   │   ├── _layout.tsx         # タブナビゲーション設定
+│   │   ├── index.tsx           # ホーム/ダッシュボード
+│   │   ├── add.tsx             # トランザクション追加 ★
+│   │   ├── analytics.tsx       # 分析画面（円グラフ）
+│   │   └── settings.tsx        # 設定画面（テーマ切替）
+│   ├── categories.tsx          # カテゴリ管理画面 ★
+│   ├── _layout.tsx             # ルートレイアウト
+│   └── +not-found.tsx          # 404画面
+├── components/                  # 再利用可能コンポーネント
+│   ├── AIAdviceCard.tsx        # AI支出アドバイス ★
+│   ├── EditSettingModal.tsx    # 設定編集モーダル ★
+│   └── SavingsGoal.tsx         # 貯蓄目標 ★
+├── contexts/                    # React Context
+│   ├── AuthContext.tsx         # 認証状態管理
+│   └── ThemeContext.tsx        # テーマ管理（ダークモード）★
+├── lib/                         # ユーティリティ
 │   └── supabase.ts
-├── types/                  # TypeScript型定義
+├── types/                       # TypeScript型定義
 │   └── database.ts
-└── docs/                   # ドキュメント
+└── docs/                        # ドキュメント
 ```
+
+★ = Phase 1-3 で新規追加
 
 ---
 
@@ -52,36 +56,34 @@ smart-income-allocator-mobile/
 ### タブナビゲーション
 | タブ | ファイル | 機能 |
 |------|----------|------|
-| ホーム | `index.tsx` | 収支サマリー、カテゴリ別支出 |
+| ホーム | `index.tsx` | 収支サマリー、AIアドバイス |
 | 追加 | `add.tsx` | トランザクション入力 |
-| 分析 | `analytics.tsx` | 収支統計、貯蓄表示 |
-| 設定 | `settings.tsx` | プロフィール、設定変更 |
+| 分析 | `analytics.tsx` | 円グラフ、貯蓄目標 |
+| 設定 | `settings.tsx` | プロフィール、テーマ切替 |
 
 ### スタンドアロン画面
 | 画面 | ファイル | 機能 |
 |------|----------|------|
-| カテゴリ管理 | `categories.tsx` | カテゴリ追加/編集/削除 |
+| カテゴリ管理 | `categories.tsx` | 追加/編集/削除 |
 
 ---
 
-## 認証フロー
+## コンポーネント
 
-```
-┌─────────────┐
-│   App起動   │
-└──────┬──────┘
-       ▼
-┌─────────────┐     未認証     ┌─────────────┐
-│ AuthContext │───────────────▶│ ログイン画面 │
-│ セッション  │                 └──────┬──────┘
-│   チェック  │                        │
-└──────┬──────┘                        │ログイン成功
-       │認証済み                       ▼
-       ▼                        ┌─────────────┐
-┌─────────────┐                 │ SecureStore │
-│ タブ画面    │◀────────────────│ トークン保存 │
-└─────────────┘                 └─────────────┘
-```
+| コンポーネント | 用途 |
+|----------------|------|
+| `AIAdviceCard` | 支出パターン分析とアドバイス（Pro機能） |
+| `SavingsGoal` | 貯蓄目標の進捗表示（Pro機能） |
+| `EditSettingModal` | 汎用設定編集モーダル |
+
+---
+
+## Context
+
+| Context | 用途 |
+|---------|------|
+| `AuthContext` | ユーザー認証、プロフィール、Pro判定 |
+| `ThemeContext` | ライト/ダーク/システム連動テーマ |
 
 ---
 
