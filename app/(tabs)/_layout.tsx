@@ -1,9 +1,9 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/components/useColorScheme';
+import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import { StyleSheet, Platform } from 'react-native';
+import { Tabs } from 'expo-router';
+import React from 'react';
+import { Platform, StyleSheet } from 'react-native';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -50,6 +50,15 @@ export default function TabLayout() {
           title: 'ホーム',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="add"
+        options={{
+          title: '追加',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="add-circle" size={size + 4} color={color} />
           ),
         }}
       />

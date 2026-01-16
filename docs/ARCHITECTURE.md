@@ -24,13 +24,16 @@ smart-income-allocator-mobile/
 │   ├── (tabs)/            # メインアプリ（認証済みユーザー）
 │   │   ├── _layout.tsx    # タブナビゲーション設定
 │   │   ├── index.tsx      # ホーム/ダッシュボード
+│   │   ├── add.tsx        # トランザクション追加 ★NEW
 │   │   ├── analytics.tsx  # 分析画面
 │   │   └── settings.tsx   # 設定画面
+│   ├── categories.tsx     # カテゴリ管理画面 ★NEW
 │   ├── _layout.tsx        # ルートレイアウト（AuthProvider）
 │   ├── modal.tsx          # モーダル画面
 │   └── +not-found.tsx     # 404画面
 ├── assets/                 # 画像・フォント
 ├── components/             # 再利用可能コンポーネント
+│   └── EditSettingModal.tsx # 設定編集モーダル ★NEW
 ├── constants/              # 定数（Colors等）
 ├── contexts/               # React Context
 │   └── AuthContext.tsx
@@ -41,6 +44,23 @@ smart-income-allocator-mobile/
 │   └── database.ts
 └── docs/                   # ドキュメント
 ```
+
+---
+
+## 画面構成
+
+### タブナビゲーション
+| タブ | ファイル | 機能 |
+|------|----------|------|
+| ホーム | `index.tsx` | 収支サマリー、カテゴリ別支出 |
+| 追加 | `add.tsx` | トランザクション入力 |
+| 分析 | `analytics.tsx` | 収支統計、貯蓄表示 |
+| 設定 | `settings.tsx` | プロフィール、設定変更 |
+
+### スタンドアロン画面
+| 画面 | ファイル | 機能 |
+|------|----------|------|
+| カテゴリ管理 | `categories.tsx` | カテゴリ追加/編集/削除 |
 
 ---
 
