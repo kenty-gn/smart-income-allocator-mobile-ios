@@ -26,14 +26,105 @@ npx expo start
 ### ホットリロード
 Expoは自動でホットリロードします。ファイル保存時に即座に反映。
 
-### TypeScriptチェック
+### npmスクリプト一覧
+| コマンド | 説明 |
+|----------|------|
+| `npm start` | Expo開発サーバー起動 |
+| `npm run ios` | iOSシミュレータで起動 |
+| `npm run android` | Androidエミュレータで起動 |
+| `npm run web` | Webブラウザで起動 |
+| `npm run lint` | ESLintでコード品質チェック |
+| `npm run lint:fix` | ESLintで自動修正 |
+| `npm run format` | Prettierでコード整形 |
+| `npm run format:check` | フォーマットチェック（修正しない） |
+| `npm run typecheck` | TypeScript型チェック |
+| `npm run test` | テスト実行 |
+| `npm run prebuild` | ビルド前チェック（typecheck + lint） |
+| `npm run clean` | 依存関係リセット |
+
+---
+
+## コード品質ツール
+
+### ESLint
+コードの品質と一貫性を保つためのリンター。
+
 ```bash
-npx tsc --noEmit
+# 全ファイルをチェック
+npm run lint
+
+# 自動修正可能な問題を修正
+npm run lint:fix
 ```
 
-### コード整形
+**設定ファイル**: `.eslintrc.json`
+
+主なルール:
+- TypeScript厳格モード
+- React Hooks ルール
+- 未使用変数の警告（`_`プレフィックスは除外）
+- Prettier統合
+
+### Prettier
+コードフォーマッター。保存時に自動整形されます。
+
 ```bash
-npx prettier --write .
+# 全ファイルを整形
+npm run format
+
+# 整形が必要なファイルをチェック
+npm run format:check
+```
+
+**設定ファイル**: `.prettierrc`
+
+設定内容:
+| 項目 | 値 |
+|------|-----|
+| セミコロン | あり |
+| クォート | シングル |
+| インデント | 2スペース |
+| 末尾カンマ | ES5準拠 |
+| 行幅 | 100文字 |
+| 改行コード | LF |
+
+### TypeScriptチェック
+```bash
+npm run typecheck
+```
+
+
+---
+
+## VSCode設定
+
+このプロジェクトにはVSCode用の設定が含まれています。
+
+### 自動設定（.vscode/settings.json）
+- **保存時自動フォーマット**: ファイル保存時にPrettierで自動整形
+- **保存時ESLint修正**: ESLintエラーを自動修正
+- **インポート整理**: 未使用インポートの削除と並べ替え
+- **デフォルトフォーマッター**: Prettier
+
+### 推奨拡張機能（.vscode/extensions.json）
+VSCodeを開くと、以下の拡張機能のインストールを促されます：
+
+| 拡張機能 | 用途 |
+|----------|------|
+| `expo.vscode-expo-tools` | Expo開発ツール |
+| `dbaeumer.vscode-eslint` | ESLint統合 |
+| `esbenp.prettier-vscode` | Prettier統合 |
+| `bradlc.vscode-tailwindcss` | Tailwind CSS |
+| `formulahendry.auto-rename-tag` | タグ自動リネーム |
+| `christian-kohler.path-intellisense` | パス補完 |
+| `streetsidesoftware.code-spell-checker` | スペルチェック |
+
+### 手動インストール
+```bash
+# 推奨拡張機能を一括インストール
+code --install-extension expo.vscode-expo-tools
+code --install-extension dbaeumer.vscode-eslint
+code --install-extension esbenp.prettier-vscode
 ```
 
 ---
