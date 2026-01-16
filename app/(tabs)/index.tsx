@@ -1,31 +1,368 @@
-import { StyleSheet } from 'react-native';
+import { useState, useEffect, useMemo } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  ActivityIndicator,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
+import { Transaction, Category, BudgetSummary } from '@/types/database';
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+export default function DashboardScreen() {
+  const { user, profile, isPro } = useAuth();
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-export default function TabOneScreen() {
+  const targetIncome = profile?.target_income || 300000;
+
+  const fetchData = async () => {
+    if (!user) return;
+
+    try {
+      const [transRes, catRes] = await Promise.all([
+        supabase.from('transactions').select('*').eq('user_id', user.id),
+        supabase.from('categories').select('*').eq('user_id', user.id),
+      ]);
+
+      if (transRes.data) setTransactions(transRes.data);
+      if (catRes.data) setCategories(catRes.data);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [user]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchData();
+  };
+
+  const budgetSummary: BudgetSummary = useMemo(() => {
+    const fixedCosts = categories
+      .filter((c) => c.type === 'fixed')
+      .reduce((sum, c) => {
+        const spent = transactions
+          .filter((t) => t.category_id === c.id && t.type === 'expense')
+          .reduce((s, t) => s + Number(t.amount), 0);
+        return sum + spent;
+      }, 0);
+
+    const totalIncome = transactions
+      .filter((t) => t.type === 'income')
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    const disposableIncome = targetIncome - fixedCosts;
+
+    const variableSpent = categories
+      .filter((c) => c.type === 'variable')
+      .reduce((sum, c) => {
+        const spent = transactions
+          .filter((t) => t.category_id === c.id && t.type === 'expense')
+          .reduce((s, t) => s + Number(t.amount), 0);
+        return sum + spent;
+      }, 0);
+
+    return {
+      total_income: Math.max(totalIncome, targetIncome),
+      fixed_costs: fixedCosts,
+      disposable_income: disposableIncome,
+      variable_spent: variableSpent,
+      remaining: disposableIncome - variableSpent,
+    };
+  }, [categories, transactions, targetIncome]);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('ja-JP', {
+      style: 'currency',
+      currency: 'JPY',
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#10b981" />
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
-    </View>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#10b981" />
+      }
+    >
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.greeting}>おかえりなさい 👋</Text>
+        <Text style={styles.title}>今月の予算</Text>
+      </View>
+
+      {/* Budget Card */}
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>収支サマリー</Text>
+          <LinearGradient
+            colors={['#10b981', '#14b8a6']}
+            style={styles.iconBadge}
+          >
+            <Ionicons name="trending-up" size={16} color="white" />
+          </LinearGradient>
+        </View>
+
+        <Text style={styles.incomeLabel}>総収入</Text>
+        <Text style={styles.incomeAmount}>
+          {formatCurrency(budgetSummary.total_income)}
+        </Text>
+
+        {/* Progress Bar */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <View
+              style={[
+                styles.progressFilled,
+                {
+                  width: `${Math.min((budgetSummary.fixed_costs / budgetSummary.total_income) * 100, 100)}%`,
+                  backgroundColor: '#f43f5e',
+                },
+              ]}
+            />
+            <View
+              style={[
+                styles.progressFilled,
+                {
+                  width: `${Math.min((budgetSummary.variable_spent / budgetSummary.total_income) * 100, 100)}%`,
+                  backgroundColor: '#f59e0b',
+                },
+              ]}
+            />
+          </View>
+        </View>
+
+        {/* Legend */}
+        <View style={styles.legend}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: '#f43f5e' }]} />
+            <Text style={styles.legendLabel}>固定費</Text>
+            <Text style={styles.legendValue}>{formatCurrency(budgetSummary.fixed_costs)}</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: '#f59e0b' }]} />
+            <Text style={styles.legendLabel}>変動費</Text>
+            <Text style={styles.legendValue}>{formatCurrency(budgetSummary.variable_spent)}</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: '#10b981' }]} />
+            <Text style={styles.legendLabel}>残り</Text>
+            <Text style={[styles.legendValue, { color: budgetSummary.remaining >= 0 ? '#10b981' : '#f43f5e' }]}>
+              {formatCurrency(budgetSummary.remaining)}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Pro Badge */}
+      {isPro && (
+        <View style={styles.proBadge}>
+          <Ionicons name="sparkles" size={14} color="#a855f7" />
+          <Text style={styles.proText}>PRO</Text>
+        </View>
+      )}
+
+      {/* Categories */}
+      <Text style={styles.sectionTitle}>カテゴリ別</Text>
+      <View style={styles.categoriesGrid}>
+        {categories.slice(0, 6).map((cat) => {
+          const spent = transactions
+            .filter((t) => t.category_id === cat.id && t.type === 'expense')
+            .reduce((sum, t) => sum + Number(t.amount), 0);
+
+          return (
+            <View key={cat.id} style={styles.categoryCard}>
+              <View style={[styles.categoryColor, { backgroundColor: cat.color }]} />
+              <Text style={styles.categoryName}>{cat.name}</Text>
+              <Text style={styles.categoryAmount}>{formatCurrency(spent)}</Text>
+            </View>
+          );
+        })}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+  },
+  content: {
+    padding: 16,
+    paddingBottom: 100,
+  },
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  header: {
+    marginBottom: 20,
+  },
+  greeting: {
+    fontSize: 14,
+    color: '#64748b',
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#0f172a',
   },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0f172a',
+  },
+  iconBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  incomeLabel: {
+    fontSize: 12,
+    color: '#64748b',
+    textAlign: 'center',
+  },
+  incomeAmount: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#0f172a',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  progressContainer: {
+    marginBottom: 20,
+  },
+  progressBar: {
+    height: 12,
+    backgroundColor: '#e2e8f0',
+    borderRadius: 6,
+    overflow: 'hidden',
+    flexDirection: 'row',
+  },
+  progressFilled: {
+    height: '100%',
+  },
+  legend: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  legendItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginBottom: 4,
+  },
+  legendLabel: {
+    fontSize: 11,
+    color: '#64748b',
+    marginBottom: 2,
+  },
+  legendValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0f172a',
+  },
+  proBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#f3e8ff',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 16,
+    gap: 4,
+  },
+  proText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#a855f7',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#0f172a',
+    marginBottom: 12,
+  },
+  categoriesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  categoryCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 16,
+    width: '47%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  categoryColor: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    marginBottom: 8,
+  },
+  categoryName: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#0f172a',
+    marginBottom: 4,
+  },
+  categoryAmount: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0f172a',
   },
 });

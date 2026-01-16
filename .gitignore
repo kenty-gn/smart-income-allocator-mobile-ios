@@ -1,41 +1,103 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
-# dependencies
-node_modules/
+# ========================================
+# Environment & Secrets (SECURITY CRITICAL)
+# ========================================
+.env
+.env.*
+.env.local
+.env.development
+.env.production
+.env*.local
+!.env.example
 
-# Expo
+# Private keys & certificates
+*.pem
+*.key
+*.p8
+*.p12
+*.jks
+*.mobileprovision
+*.keystore
+*.cer
+*.crt
+secrets/
+credentials/
+
+# ========================================
+# Dependencies
+# ========================================
+node_modules/
+.pnpm-store/
+.yarn/
+
+# ========================================
+# Expo & React Native
+# ========================================
 .expo/
 dist/
 web-build/
 expo-env.d.ts
 
-# Native
+# Native build outputs
+/ios
+/android
 .kotlin/
 *.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
 
 # Metro
 .metro-health-check*
 
-# debug
+# ========================================
+# Build & Cache
+# ========================================
+*.tsbuildinfo
+.cache/
+.tmp/
+tmp/
+temp/
+
+# ========================================
+# Debug & Logs
+# ========================================
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+*.log
+logs/
 
+# ========================================
+# IDE & OS
+# ========================================
 # macOS
 .DS_Store
-*.pem
+._*
+.Spotlight-V100
+.Trashes
 
-# local env files
-.env*.local
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
 
-# typescript
-*.tsbuildinfo
+# Linux
+*~
 
-# generated native folders
-/ios
-/android
+# IDE
+.idea/
+*.swp
+*.swo
+*.sublime-*
+
+# ========================================
+# Testing
+# ========================================
+coverage/
+.nyc_output/
+jest-results/
+
+# ========================================
+# Misc
+# ========================================
+*.bak
+*.backup
