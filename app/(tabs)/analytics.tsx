@@ -1,3 +1,4 @@
+import SavingsGoal from '@/components/SavingsGoal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Category, Transaction } from '@/types/database';
@@ -18,7 +19,7 @@ import { PieChart } from 'react-native-gifted-charts';
 const screenWidth = Dimensions.get('window').width;
 
 export default function AnalyticsScreen() {
-  const { user, isPro } = useAuth();
+  const { user, isPro, profile } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -141,6 +142,16 @@ export default function AnalyticsScreen() {
           </View>
         </LinearGradient>
       </View>
+
+      {/* Savings Goal */}
+      {isPro && (
+        <SavingsGoal
+          currentSavings={totalIncome - totalExpense}
+          targetAmount={profile?.target_income || 500000}
+          monthlyIncome={totalIncome}
+          monthlyExpense={totalExpense}
+        />
+      )}
 
       {/* Pie Chart */}
       {pieChartData.length > 0 && (

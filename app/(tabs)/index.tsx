@@ -1,17 +1,18 @@
-import { useState, useEffect, useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-  ActivityIndicator,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import AIAdviceCard from '@/components/AIAdviceCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { Transaction, Category, BudgetSummary } from '@/types/database';
+import { BudgetSummary, Category, Transaction } from '@/types/database';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useEffect, useMemo, useState } from 'react';
+import {
+    ActivityIndicator,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
+} from 'react-native';
 
 export default function DashboardScreen() {
   const { user, profile, isPro } = useAuth();
@@ -113,6 +114,14 @@ export default function DashboardScreen() {
         <Text style={styles.greeting}>おかえりなさい 👋</Text>
         <Text style={styles.title}>今月の予算</Text>
       </View>
+
+      {/* AI Advice Card */}
+      <AIAdviceCard
+        transactions={transactions}
+        categories={categories}
+        isPro={isPro}
+        targetIncome={targetIncome}
+      />
 
       {/* Budget Card */}
       <View style={styles.card}>
