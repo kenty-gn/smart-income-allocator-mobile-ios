@@ -1,5 +1,6 @@
 import EditSettingModal from '@/components/EditSettingModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,6 +17,7 @@ import {
 
 export default function SettingsScreen() {
   const { user, profile, isPro, signOut, refreshProfile } = useAuth();
+  const { mode, setMode, isDark } = useTheme();
 
   // Modal states
   const [incomeModalVisible, setIncomeModalVisible] = useState(false);
@@ -154,6 +156,40 @@ export default function SettingsScreen() {
           </View>
           <Ionicons name="chevron-forward" size={20} color="#94a3b8" />
         </TouchableOpacity>
+      </View>
+
+      {/* Theme Settings */}
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>テーマ</Text>
+        <View style={styles.themeRow}>
+          <TouchableOpacity
+            style={[styles.themeButton, mode === 'light' && styles.themeButtonActive]}
+            onPress={() => setMode('light')}
+          >
+            <Ionicons name="sunny" size={20} color={mode === 'light' ? 'white' : '#64748b'} />
+            <Text style={[styles.themeText, mode === 'light' && styles.themeTextActive]}>
+              ライト
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.themeButton, mode === 'dark' && styles.themeButtonActive]}
+            onPress={() => setMode('dark')}
+          >
+            <Ionicons name="moon" size={20} color={mode === 'dark' ? 'white' : '#64748b'} />
+            <Text style={[styles.themeText, mode === 'dark' && styles.themeTextActive]}>
+              ダーク
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.themeButton, mode === 'system' && styles.themeButtonActive]}
+            onPress={() => setMode('system')}
+          >
+            <Ionicons name="phone-portrait" size={20} color={mode === 'system' ? 'white' : '#64748b'} />
+            <Text style={[styles.themeText, mode === 'system' && styles.themeTextActive]}>
+              自動
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Pro Upgrade */}
@@ -337,4 +373,36 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#94a3b8',
   },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748b',
+    marginBottom: 12,
+  },
+  themeRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  themeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#e2e8f0',
+    gap: 6,
+  },
+  themeButtonActive: {
+    backgroundColor: '#10b981',
+  },
+  themeText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#64748b',
+  },
+  themeTextActive: {
+    color: 'white',
+  },
 });
+
