@@ -1,6 +1,6 @@
 # アーキテクチャ
 
-> 最終更新: 2026-01-16
+> 最終更新: 2026-01-17
 
 ## 技術スタック
 
@@ -11,7 +11,7 @@
 | ナビゲーション | Expo Router |
 | 状態管理 | React Context |
 | バックエンド | Supabase |
-| 認証 | Supabase Auth + SecureStore |
+| 認証 | Supabase Auth + Google + Apple |
 | グラフ | react-native-gifted-charts |
 
 ---
