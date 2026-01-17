@@ -64,19 +64,20 @@
 
 ---
 
-## Phase 4: 本番準備 🚧 進行中
+## Phase 4: 本番準備 ✅ 完了
 
 ### 4.1 EAS Build設定 ✅
 - [x] eas.json 作成
 - [x] app.json にbundleIdentifier追加
-- [ ] 環境変数の設定
+- [x] EASプロジェクト連携
+- [x] 開発ビルド成功
 
 ### 4.2 エラーハンドリング ✅
 - [x] ErrorBoundaryコンポーネント追加
 
 ### 4.3 デプロイ
-- [ ] EAS Buildテスト
-- [ ] TestFlight配布
+- [x] EAS Buildテスト成功
+- [ ] TestFlight配布（Apple Developer Program必要）
 - [ ] App Store提出
 
 ---
