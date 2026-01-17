@@ -1,33 +1,55 @@
 # デプロイガイド
 
-## EAS Build（推奨）
+> 最終更新: 2026-01-17
 
-### 1. EAS CLIインストール
+## 前提条件
+
+- Expo アカウント（[expo.dev](https://expo.dev)）
+- Apple Developer Program（年間$99）
+
+---
+
+## EAS Build
+
+### 1. EAS CLIを使用（npx推奨）
 ```bash
-npm install -g eas-cli
-eas login
+# ログイン（初回のみ）
+npx eas-cli login
+
+# ビルド設定
+npx eas-cli build:configure
 ```
 
-### 2. プロジェクト設定
-```bash
-eas build:configure
-```
+### 2. ビルド実行
 
-### 3. ビルド実行
-
-#### 開発ビルド
+#### 開発ビルド（シミュレータ用）
 ```bash
-eas build --profile development --platform ios
+npx eas-cli build --profile development --platform ios
 ```
 
 #### プレビュービルド（TestFlight用）
 ```bash
-eas build --profile preview --platform ios
+npx eas-cli build --profile preview --platform ios
 ```
 
 #### 本番ビルド（App Store用）
 ```bash
-eas build --profile production --platform ios
+npx eas-cli build --profile production --platform ios
+```
+
+---
+
+## 環境変数の設定
+
+### EASシークレット（推奨）
+```bash
+npx eas-cli secret:create --name EXPO_PUBLIC_SUPABASE_URL --value "https://..."
+npx eas-cli secret:create --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "..."
+```
+
+### 確認
+```bash
+npx eas-cli secret:list
 ```
 
 ---
@@ -41,65 +63,73 @@ https://developer.apple.com/programs/
 
 ### 3. EASでSubmit
 ```bash
-eas submit --platform ios
+npx eas-cli submit --platform ios
 ```
 
 ---
 
-## 環境別設定
+## eas.json 設定
 
-### app.json
+```json
+{
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": { "simulator": true }
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {
+      "autoIncrement": true
+    }
+  }
+}
+```
+
+---
+
+## app.json 設定
+
 ```json
 {
   "expo": {
-    "name": "SmartBudget",
-    "slug": "smart-income-allocator-mobile",
-    "version": "1.0.0",
+    "name": "smart-income-allocator-mobile",
     "ios": {
-      "bundleIdentifier": "com.yourcompany.smartbudget",
+      "bundleIdentifier": "com.smartbudget.app",
       "buildNumber": "1"
     }
   }
 }
 ```
 
-### eas.json
-```json
-{
-  "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal"
-    },
-    "preview": {
-      "distribution": "internal"
-    },
-    "production": {}
-  }
-}
-```
-
----
-
-## 環境変数（本番）
-
-EASシークレットを使用:
-```bash
-eas secret:create --name EXPO_PUBLIC_SUPABASE_URL --value "https://..."
-eas secret:create --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "..."
-```
-
 ---
 
 ## バージョニング
 
-### セマンティックバージョニング
-- `x.0.0` - メジャー（破壊的変更）
-- `0.x.0` - マイナー（新機能）
-- `0.0.x` - パッチ（バグ修正）
+| バージョン | 意味 |
+|------------|------|
+| `x.0.0` | メジャー（破壊的変更） |
+| `0.x.0` | マイナー（新機能） |
+| `0.0.x` | パッチ（バグ修正） |
 
-### ビルド番号
-App Store提出ごとにインクリメント:
+### 自動インクリメント
 ```bash
-eas build --auto-increment
+npx eas-cli build --auto-increment
+```
+
+---
+
+## トラブルシューティング
+
+### EAS CLI権限エラー
+グローバルインストールではなくnpxを使用：
+```bash
+npx eas-cli <command>
+```
+
+### ビルドエラー
+```bash
+npx expo doctor
 ```
