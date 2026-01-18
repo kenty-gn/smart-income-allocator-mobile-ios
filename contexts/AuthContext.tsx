@@ -31,11 +31,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isPro = profile?.subscription_tier === 'pro';
 
-  // Google Auth
-  const [, googleResponse, googlePromptAsync] = Google.useAuthRequest({
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-  });
+  // Google Auth - only initialize if client IDs are configured
+  const googleClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
+  const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+  
+  const [, googleResponse, googlePromptAsync] = Google.useAuthRequest(
+    googleClientId
+      ? {
+          iosClientId: googleClientId,
+          webClientId: webClientId,
+        }
+      : null as any
+  );
 
   useEffect(() => {
     if (googleResponse?.type === 'success') {
