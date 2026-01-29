@@ -35,14 +35,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const googleClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
   const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
   
-  const [, googleResponse, googlePromptAsync] = Google.useAuthRequest(
-    googleClientId
+  const [request, googleResponse, googlePromptAsync] = Google.useAuthRequest(
+    webClientId
       ? {
+          expoClientId: webClientId,
           iosClientId: googleClientId,
           webClientId: webClientId,
+          redirectUri: 'https://auth.expo.io/@kenty1031/smart-income-allocator-mobile',
         }
       : null as any
   );
+
+  useEffect(() => {
+    if (request) {
+      console.log('Google Auth Redirect URI:', request.redirectUri);
+    }
+  }, [request]);
 
   useEffect(() => {
     if (googleResponse?.type === 'success') {
