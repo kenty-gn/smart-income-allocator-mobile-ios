@@ -7,22 +7,23 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 export default function SettingsScreen() {
-  const { user, profile, isPro, signOut, refreshProfile } = useAuth();
-  const { mode, setMode, isDark } = useTheme();
+  const { user, profile, isPro, signOut, refreshProfile, upgradeToPro, downgradeFromPro } = useAuth();
+  const { mode, setMode, colors } = useTheme();
 
   // Modal states
   const [incomeModalVisible, setIncomeModalVisible] = useState(false);
   const [salaryDayModalVisible, setSalaryDayModalVisible] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUpgrading, setIsUpgrading] = useState(false);
 
   const handleLogout = () => {
     Alert.alert('ログアウト', 'ログアウトしますか？', [
@@ -92,8 +93,8 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>設定</Text>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
+      <Text style={[styles.title, { color: colors.text }]}>設定</Text>
 
       {/* Profile Card */}
       <View style={styles.card}>
@@ -192,9 +193,34 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      {/* Pro Upgrade */}
-      {!isPro && (
-        <TouchableOpacity style={styles.upgradeCard}>
+      {/* Pro Upgrade / Manage */}
+      {!isPro ? (
+        <TouchableOpacity
+          style={styles.upgradeCard}
+          disabled={isUpgrading}
+          onPress={() => {
+            Alert.alert(
+              'Proにアップグレード',
+              'Proプランでは以下の機能が利用できます：\n\n• AIによる支出予測\n• 詳細な分析レポート\n• 貯蓄目標設定\n\nアップグレードしますか？',
+              [
+                { text: 'キャンセル', style: 'cancel' },
+                {
+                  text: 'アップグレード',
+                  onPress: async () => {
+                    setIsUpgrading(true);
+                    const { error } = await upgradeToPro();
+                    setIsUpgrading(false);
+                    if (error) {
+                      Alert.alert('エラー', 'アップグレードに失敗しました');
+                    } else {
+                      Alert.alert('完了', 'Proプランにアップグレードしました！');
+                    }
+                  },
+                },
+              ]
+            );
+          }}
+        >
           <LinearGradient
             colors={['#f59e0b', '#f97316']}
             start={{ x: 0, y: 0 }}
@@ -208,6 +234,47 @@ export default function SettingsScreen() {
             <Ionicons name="arrow-forward" size={20} color="white" />
           </LinearGradient>
         </TouchableOpacity>
+      ) : (
+        <View style={styles.proManageCard}>
+          <View style={styles.proStatusRow}>
+            <LinearGradient
+              colors={['#a855f7', '#7c3aed']}
+              style={styles.proStatusBadge}
+            >
+              <Ionicons name="sparkles" size={16} color="white" />
+            </LinearGradient>
+            <View style={styles.proStatusInfo}>
+              <Text style={[styles.proStatusTitle, { color: colors.text }]}>Proプラン利用中</Text>
+              <Text style={[styles.proStatusDesc, { color: colors.textSecondary }]}>全ての機能が利用可能</Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={styles.downgradeButton}
+            onPress={() => {
+              Alert.alert(
+                'プランを解除',
+                'Proプランを解除してFreeプランに戻りますか？\n\nAIアドバイスや貯蓄目標機能が利用できなくなります。',
+                [
+                  { text: 'キャンセル', style: 'cancel' },
+                  {
+                    text: '解除する',
+                    style: 'destructive',
+                    onPress: async () => {
+                      const { error } = await downgradeFromPro();
+                      if (error) {
+                        Alert.alert('エラー', '解除に失敗しました');
+                      } else {
+                        Alert.alert('完了', 'Freeプランに変更しました');
+                      }
+                    },
+                  },
+                ]
+              );
+            }}
+          >
+            <Text style={styles.downgradeText}>プランを解除</Text>
+          </TouchableOpacity>
+        </View>
       )}
 
       {/* Logout */}
@@ -404,5 +471,42 @@ const styles = StyleSheet.create({
   themeTextActive: {
     color: 'white',
   },
+  proManageCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+  proStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  proStatusBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  proStatusInfo: {
+    flex: 1,
+  },
+  proStatusTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  proStatusDesc: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  downgradeButton: {
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  downgradeText: {
+    fontSize: 14,
+    color: '#94a3b8',
+  },
 });
-

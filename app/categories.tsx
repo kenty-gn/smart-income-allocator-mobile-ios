@@ -6,15 +6,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 const COLORS = [
@@ -25,7 +25,7 @@ const COLORS = [
 ];
 
 export default function CategoriesScreen() {
-  const { user } = useAuth();
+  const { user, isPro } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -35,6 +35,7 @@ export default function CategoriesScreen() {
   const [name, setName] = useState('');
   const [type, setType] = useState<CategoryType>('variable');
   const [color, setColor] = useState(COLORS[0]);
+  const [targetAmount, setTargetAmount] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -63,11 +64,13 @@ export default function CategoriesScreen() {
       setName(category.name);
       setType(category.type);
       setColor(category.color);
+      setTargetAmount(category.target_amount ? String(category.target_amount) : '');
     } else {
       setEditingCategory(null);
       setName('');
       setType('variable');
       setColor(COLORS[Math.floor(Math.random() * COLORS.length)]);
+      setTargetAmount('');
     }
     setModalVisible(true);
   };
@@ -79,12 +82,18 @@ export default function CategoriesScreen() {
     }
 
     setIsSaving(true);
+    const parsedTarget = targetAmount ? parseInt(targetAmount.replace(/[^0-9]/g, '')) : null;
     try {
       if (editingCategory) {
         // Update
         const { error } = await supabase
           .from('categories')
-          .update({ name: name.trim(), type, color })
+          .update({
+            name: name.trim(),
+            type,
+            color,
+            target_amount: isPro ? parsedTarget : editingCategory.target_amount,
+          })
           .eq('id', editingCategory.id);
         if (error) throw error;
       } else {
@@ -94,7 +103,7 @@ export default function CategoriesScreen() {
           name: name.trim(),
           type,
           color,
-          target_amount: null,
+          target_amount: isPro ? parsedTarget : null,
           target_percentage: null,
         });
         if (error) throw error;
@@ -278,7 +287,34 @@ export default function CategoriesScreen() {
               ))}
             </View>
 
-            {/* Save */}
+            {/* Target Amount (Pro Feature) */}
+            <View style={styles.targetSection}>
+              <View style={styles.targetHeader}>
+                <Text style={styles.label}>月間予算目標</Text>
+                {!isPro && (
+                  <View style={styles.proBadge}>
+                    <Ionicons name="sparkles" size={10} color="#a855f7" />
+                    <Text style={styles.proBadgeText}>PRO</Text>
+                  </View>
+                )}
+              </View>
+              {isPro ? (
+                <TextInput
+                  style={styles.input}
+                  value={targetAmount}
+                  onChangeText={setTargetAmount}
+                  keyboardType="numeric"
+                  placeholder="例: 30000"
+                  placeholderTextColor="#94a3b8"
+                />
+              ) : (
+                <View style={styles.proLockedInput}>
+                  <Ionicons name="lock-closed" size={16} color="#94a3b8" />
+                  <Text style={styles.proLockedText}>Proで目標設定が可能</Text>
+                </View>
+              )}
+            </View>
+
             <TouchableOpacity
               style={styles.saveButton}
               onPress={handleSave}
@@ -371,4 +407,36 @@ const styles = StyleSheet.create({
   saveButton: { marginTop: 32, borderRadius: 16, overflow: 'hidden' },
   saveGradient: { paddingVertical: 16, alignItems: 'center' },
   saveText: { fontSize: 18, fontWeight: '600', color: 'white' },
+  targetSection: { marginTop: 8 },
+  targetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  proBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f3e8ff',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    gap: 4,
+  },
+  proBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#a855f7',
+  },
+  proLockedInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 12,
+    padding: 16,
+    gap: 8,
+  },
+  proLockedText: {
+    fontSize: 14,
+    color: '#94a3b8',
+  },
 });

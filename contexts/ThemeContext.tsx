@@ -1,7 +1,10 @@
-import React, { createContext, ReactNode, useContext, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { useColorScheme as useSystemColorScheme } from 'react-native';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
+
+const THEME_STORAGE_KEY = '@theme_mode';
 
 interface ThemeColors {
   background: string;
@@ -41,12 +44,45 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const systemColorScheme = useSystemColorScheme();
-  const [mode, setMode] = useState<ThemeMode>('system');
+  const [mode, setModeState] = useState<ThemeMode>('system');
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load saved theme on mount
+  useEffect(() => {
+    const loadTheme = async () => {
+      try {
+        const savedMode = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+        if (savedMode && ['light', 'dark', 'system'].includes(savedMode)) {
+          setModeState(savedMode as ThemeMode);
+        }
+      } catch (error) {
+        console.error('Error loading theme:', error);
+      } finally {
+        setIsLoaded(true);
+      }
+    };
+    loadTheme();
+  }, []);
+
+  // Save theme when changed
+  const setMode = async (newMode: ThemeMode) => {
+    try {
+      await AsyncStorage.setItem(THEME_STORAGE_KEY, newMode);
+      setModeState(newMode);
+    } catch (error) {
+      console.error('Error saving theme:', error);
+    }
+  };
 
   const isDark =
     mode === 'dark' || (mode === 'system' && systemColorScheme === 'dark');
 
   const colors = isDark ? darkColors : lightColors;
+
+  // Wait until theme is loaded to avoid flicker
+  if (!isLoaded) {
+    return null;
+  }
 
   return (
     <ThemeContext.Provider value={{ mode, isDark, colors, setMode }}>

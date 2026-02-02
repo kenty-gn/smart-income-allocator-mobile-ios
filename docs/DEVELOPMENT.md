@@ -193,6 +193,23 @@ xcrun simctl shutdown all
 xcrun simctl boot "iPhone 15 Pro"
 ```
 
+### ソーシャル認証（Google/Apple）がExpo Goで動作しない
+**原因**: Expo Goにはネイティブ認証モジュールが含まれていないため、Google/Appleログインはサポートされていません。
+
+**解決策**: Development Buildを作成してテストする
+```bash
+# EAS CLIをインストール
+npm install -g eas-cli
+
+# EASにログイン
+eas login
+
+# Development Buildを作成
+eas build --profile development --platform ios
+```
+
+**開発中の代替**: メール/パスワード認証はExpo Goでも動作します。
+
 ---
 
 ## Git設定

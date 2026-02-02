@@ -1,21 +1,25 @@
 import AIAdviceCard from '@/components/AIAdviceCard';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { BudgetSummary, Category, Transaction } from '@/types/database';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
-    ActivityIndicator,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 export default function DashboardScreen() {
   const { user, profile, isPro } = useAuth();
+  const { colors } = useTheme();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -95,7 +99,7 @@ export default function DashboardScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color="#10b981" />
       </View>
     );
@@ -103,7 +107,7 @@ export default function DashboardScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.content}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#10b981" />
@@ -111,8 +115,8 @@ export default function DashboardScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.greeting}>おかえりなさい 👋</Text>
-        <Text style={styles.title}>今月の予算</Text>
+        <Text style={[styles.greeting, { color: colors.textSecondary }]}>おかえりなさい 👋</Text>
+        <Text style={[styles.title, { color: colors.text }]}>今月の予算</Text>
       </View>
 
       {/* AI Advice Card */}
@@ -211,6 +215,45 @@ export default function DashboardScreen() {
           );
         })}
       </View>
+
+      {/* Recent Transactions */}
+      <View style={styles.recentHeader}>
+        <Text style={styles.sectionTitle}>直近の取引</Text>
+        <TouchableOpacity onPress={() => router.push('/transactions')}>
+          <Text style={styles.seeAllText}>全て見る →</Text>
+        </TouchableOpacity>
+      </View>
+      {transactions.slice(0, 3).map((t) => {
+        const cat = categories.find((c) => c.id === t.category_id);
+        return (
+          <TouchableOpacity
+            key={t.id}
+            style={styles.recentItem}
+            onPress={() => router.push('/transactions')}
+          >
+            <View style={[styles.recentDot, { backgroundColor: cat?.color || '#94a3b8' }]} />
+            <View style={styles.recentInfo}>
+              <Text style={styles.recentCategory}>
+                {t.type === 'income' ? '収入' : cat?.name || '未分類'}
+              </Text>
+              {t.description && <Text style={styles.recentDesc}>{t.description}</Text>}
+            </View>
+            <Text
+              style={[
+                styles.recentAmount,
+                t.type === 'income' ? styles.incomeColor : styles.expenseColor,
+              ]}
+            >
+              {t.type === 'income' ? '+' : '-'}{formatCurrency(Number(t.amount))}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+      {transactions.length === 0 && (
+        <View style={styles.emptyRecent}>
+          <Text style={styles.emptyText}>取引がありません</Text>
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -373,5 +416,62 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#0f172a',
+  },
+  recentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 24,
+    marginBottom: 12,
+  },
+  seeAllText: {
+    fontSize: 14,
+    color: '#10b981',
+    fontWeight: '500',
+  },
+  recentItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+    gap: 12,
+  },
+  recentDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  recentInfo: {
+    flex: 1,
+  },
+  recentCategory: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#0f172a',
+  },
+  recentDesc: {
+    fontSize: 12,
+    color: '#94a3b8',
+    marginTop: 2,
+  },
+  recentAmount: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  incomeColor: {
+    color: '#10b981',
+  },
+  expenseColor: {
+    color: '#f43f5e',
+  },
+  emptyRecent: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#94a3b8',
   },
 });

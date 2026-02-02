@@ -19,9 +19,26 @@ interface AuthContextType {
   signInWithApple: () => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  upgradeToPro: () => Promise<{ error: Error | null }>;
+  downgradeFromPro: () => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// デフォルトカテゴリ定義
+const DEFAULT_CATEGORIES = [
+  // 固定費
+  { name: '家賃', type: 'fixed' as const, color: '#ef4444' },
+  { name: '光熱費', type: 'fixed' as const, color: '#f97316' },
+  { name: '通信費', type: 'fixed' as const, color: '#3b82f6' },
+  { name: '保険', type: 'fixed' as const, color: '#8b5cf6' },
+  // 変動費
+  { name: '食費', type: 'variable' as const, color: '#22c55e' },
+  { name: '交通費', type: 'variable' as const, color: '#06b6d4' },
+  { name: '娯楽', type: 'variable' as const, color: '#ec4899' },
+  { name: '買い物', type: 'variable' as const, color: '#f59e0b' },
+  { name: 'その他', type: 'variable' as const, color: '#64748b' },
+];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -99,10 +116,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
       setProfile(data);
+
+      // カテゴリが空の場合、デフォルトカテゴリを作成
+      await createDefaultCategoriesIfNeeded(userId);
     } catch (error) {
       console.error('Error fetching profile:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const createDefaultCategoriesIfNeeded = async (userId: string) => {
+    try {
+      // 既存のカテゴリを確認
+      const { data: existingCategories } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1);
+
+      // カテゴリが既にあれば作成しない
+      if (existingCategories && existingCategories.length > 0) return;
+
+      // デフォルトカテゴリを作成
+      const categoriesToCreate = DEFAULT_CATEGORIES.map(cat => ({
+        user_id: userId,
+        name: cat.name,
+        type: cat.type,
+        color: cat.color,
+        target_amount: null,
+        target_percentage: null,
+      }));
+
+      const { error } = await supabase.from('categories').insert(categoriesToCreate);
+      if (error) throw error;
+      console.log('Default categories created');
+    } catch (error) {
+      console.error('Error creating default categories:', error);
     }
   };
 
@@ -159,6 +209,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const upgradeToPro = async () => {
+    if (!user) return { error: new Error('Not logged in') };
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ subscription_tier: 'pro' })
+        .eq('id', user.id);
+      if (error) throw error;
+      await refreshProfile();
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  const downgradeFromPro = async () => {
+    if (!user) return { error: new Error('Not logged in') };
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ subscription_tier: 'free' })
+        .eq('id', user.id);
+      if (error) throw error;
+      await refreshProfile();
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -172,6 +252,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signInWithApple,
         signOut,
         refreshProfile,
+        upgradeToPro,
+        downgradeFromPro,
       }}
     >
       {children}

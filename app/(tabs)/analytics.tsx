@@ -1,5 +1,6 @@
 import SavingsGoal from '@/components/SavingsGoal';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { Category, Transaction } from '@/types/database';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +21,7 @@ const screenWidth = Dimensions.get('window').width;
 
 export default function AnalyticsScreen() {
   const { user, isPro, profile } = useAuth();
+  const { colors } = useTheme();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -93,7 +95,7 @@ export default function AnalyticsScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color="#10b981" />
       </View>
     );
@@ -101,13 +103,13 @@ export default function AnalyticsScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.content}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#10b981" />
       }
     >
-      <Text style={styles.title}>分析</Text>
+      <Text style={[styles.title, { color: colors.text }]}>分析</Text>
 
       {/* Summary Cards */}
       <View style={styles.row}>
