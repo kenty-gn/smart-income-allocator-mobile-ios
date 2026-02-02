@@ -157,6 +157,25 @@ export default function SettingsScreen() {
           </View>
           <Ionicons name="chevron-forward" size={20} color="#94a3b8" />
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.settingRow}
+          onPress={() => router.push('/budget-setup')}
+        >
+          <View style={styles.settingIconContainer}>
+            <Ionicons name="sparkles" size={20} color="#3b82f6" />
+          </View>
+          <View style={styles.settingContent}>
+            <View style={styles.settingLabelRow}>
+              <Text style={styles.settingLabel}>AI予算設定</Text>
+              <View style={styles.proBadgeSmall}>
+                <Text style={styles.proBadgeSmallText}>PRO</Text>
+              </View>
+            </View>
+            <Text style={styles.settingValue}>月収から最適配分を計算</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#94a3b8" />
+        </TouchableOpacity>
       </View>
 
       {/* Theme Settings */}
@@ -508,5 +527,37 @@ const styles = StyleSheet.create({
   downgradeText: {
     fontSize: 14,
     color: '#94a3b8',
+  },
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+  },
+  settingIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#eff6ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  settingLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  proBadgeSmall: {
+    backgroundColor: '#f3e8ff',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  proBadgeSmallText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#a855f7',
   },
 });

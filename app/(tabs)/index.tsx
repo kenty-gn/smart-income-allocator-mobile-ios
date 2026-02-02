@@ -1,6 +1,7 @@
 import AIAdviceCard from '@/components/AIAdviceCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { calculateProgress, formatCurrency, getProgressStatus } from '@/lib/budgetCalculator';
 import { supabase } from '@/lib/supabase';
 import { BudgetSummary, Category, Transaction } from '@/types/database';
 import { Ionicons } from '@expo/vector-icons';
@@ -88,14 +89,6 @@ export default function DashboardScreen() {
       remaining: disposableIncome - variableSpent,
     };
   }, [categories, transactions, targetIncome]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('ja-JP', {
-      style: 'currency',
-      currency: 'JPY',
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   if (isLoading) {
     return (
@@ -199,18 +192,48 @@ export default function DashboardScreen() {
       )}
 
       {/* Categories */}
-      <Text style={styles.sectionTitle}>カテゴリ別</Text>
+      <View style={styles.categorySectionHeader}>
+        <Text style={styles.sectionTitle}>カテゴリ別</Text>
+        <TouchableOpacity onPress={() => router.push('/budget-setup')}>
+          <Text style={styles.seeAllText}>AI設定 →</Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.categoriesGrid}>
         {categories.slice(0, 6).map((cat) => {
           const spent = transactions
             .filter((t) => t.category_id === cat.id && t.type === 'expense')
             .reduce((sum, t) => sum + Number(t.amount), 0);
+          const target = cat.target_amount || 0;
+          const progress = target > 0 ? calculateProgress(spent, target) : null;
+          const status = progress !== null ? getProgressStatus(progress) : null;
 
           return (
             <View key={cat.id} style={styles.categoryCard}>
               <View style={[styles.categoryColor, { backgroundColor: cat.color }]} />
               <Text style={styles.categoryName}>{cat.name}</Text>
               <Text style={styles.categoryAmount}>{formatCurrency(spent)}</Text>
+              {target > 0 && (
+                <>
+                  <View style={styles.progressContainer}>
+                    <View style={styles.progressBg}>
+                      <View
+                        style={[
+                          styles.progressBar,
+                          {
+                            width: `${Math.min(progress || 0, 100)}%`,
+                            backgroundColor:
+                              status === 'safe' ? '#10b981' :
+                              status === 'warning' ? '#f59e0b' : '#ef4444',
+                          },
+                        ]}
+                      />
+                    </View>
+                  </View>
+                  <Text style={styles.targetText}>
+                    目標: {formatCurrency(target)}
+                  </Text>
+                </>
+              )}
             </View>
           );
         })}
@@ -473,5 +496,22 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: '#94a3b8',
+  },
+  categorySectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  progressBg: {
+    height: 6,
+    backgroundColor: '#e2e8f0',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  targetText: {
+    fontSize: 11,
+    color: '#94a3b8',
+    marginTop: 4,
   },
 });
